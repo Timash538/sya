@@ -43,6 +43,7 @@ TEST(SPSCQueueTest, QueueBecomesFull)
     EXPECT_TRUE(queue.try_push(1));
     EXPECT_TRUE(queue.try_push(2));
     EXPECT_TRUE(queue.try_push(3));
+    EXPECT_TRUE(queue.try_push(4));
 
     // Capacity физически 4,
     // но один слот мы оставляем свободным.
@@ -233,4 +234,18 @@ TEST(SPSCQueueTest, ProducerConsumer)
     consumer.join();
 
     EXPECT_FALSE(failed.load(std::memory_order_relaxed));
+}
+
+TEST(SPSCQueueTest, UsesRequestedCapacity)
+{
+    sya::SPSCQueue<int, 4> queue;
+
+    EXPECT_EQ(queue.capacity(), 4);
+
+    EXPECT_TRUE(queue.try_push(1));
+    EXPECT_TRUE(queue.try_push(2));
+    EXPECT_TRUE(queue.try_push(3));
+    EXPECT_TRUE(queue.try_push(4));
+
+    EXPECT_FALSE(queue.try_push(5));
 }

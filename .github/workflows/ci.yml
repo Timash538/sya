@@ -35,6 +35,10 @@ jobs:
             preset: linux-clang-asan
             msvc: false
 
+          - os: ubuntu-latest
+            preset: linux-clang-tsan
+            msvc: false
+
     runs-on: ${{ matrix.os }}
 
     steps:
