@@ -2,14 +2,20 @@
 #include <atomic>
 #include <concepts>
 #include <cstddef>
+#include <new>
 #include <type_traits>
 #include <utility>
-#include <new>
 
 #include <Slot.hpp>
 
 namespace sya
 {
+
+#ifdef __cpp_lib_hardware_interference_size
+inline constexpr std::size_t kCacheLineSize = std::hardware_destructive_interference_size;
+#else
+inline constexpr std::size_t kCacheLineSize = 64;
+#endif
 // Bounded lock-free SPSC queue.
 // Exactly one producer and one consumer.
 // Queue must not be destroyed while either thread is using it
@@ -58,8 +64,8 @@ class SPSCQueue
         else
             return idx + 1;
     }
-    alignas(std::hardware_destructive_interference_size) std::atomic<std::size_t> m_head{0};
-    alignas(std::hardware_destructive_interference_size) std::atomic<std::size_t> m_tail{0};
+    alignas(kCacheLineSize) std::atomic<std::size_t> m_head{0};
+    alignas(kCacheLineSize) std::atomic<std::size_t> m_tail{0};
     std::array<Slot<T>, C + 1> m_queue{};
 };
 
