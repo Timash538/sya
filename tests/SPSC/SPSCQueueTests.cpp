@@ -8,17 +8,17 @@ TEST(SPSCQueueTest, PopFromEmptyQueueReturnsFalse)
 
     int value = 0;
 
-    EXPECT_FALSE(queue.pop(value));
+    EXPECT_FALSE(queue.try_pop(value));
 }
 
 TEST(SPSCQueueTest, PushAndPopOneElement)
 {
     sya::SPSCQueue<int, 4> queue;
 
-    EXPECT_TRUE(queue.push(42));
+    EXPECT_TRUE(queue.try_push(42));
 
     int value = 0;
-    EXPECT_TRUE(queue.pop(value));
+    EXPECT_TRUE(queue.try_pop(value));
 
     EXPECT_EQ(value, 42);
 }
@@ -27,10 +27,10 @@ TEST(SPSCQueueTest, PushAndPopOnePtrElement)
 {
     sya::SPSCQueue<std::unique_ptr<int>, 4> queue;
 
-    EXPECT_TRUE(queue.push(std::make_unique<int>(42)));
+    EXPECT_TRUE(queue.try_push(std::make_unique<int>(42)));
 
     std::unique_ptr<int> value = 0;
-    EXPECT_TRUE(queue.pop(value));
+    EXPECT_TRUE(queue.try_pop(value));
 
     ASSERT_NE(value, nullptr);
     EXPECT_EQ(*value, 42);
@@ -40,35 +40,35 @@ TEST(SPSCQueueTest, QueueBecomesFull)
 {
     sya::SPSCQueue<int, 4> queue;
 
-    EXPECT_TRUE(queue.push(1));
-    EXPECT_TRUE(queue.push(2));
-    EXPECT_TRUE(queue.push(3));
+    EXPECT_TRUE(queue.try_push(1));
+    EXPECT_TRUE(queue.try_push(2));
+    EXPECT_TRUE(queue.try_push(3));
 
     // Capacity физически 4,
     // но один слот мы оставл€ем свободным.
-    EXPECT_FALSE(queue.push(4));
+    EXPECT_FALSE(queue.try_push(4));
 }
 
 TEST(SPSCQueueTest, PreservesFIFOOrder)
 {
     sya::SPSCQueue<int, 4> queue;
 
-    EXPECT_TRUE(queue.push(10));
-    EXPECT_TRUE(queue.push(20));
-    EXPECT_TRUE(queue.push(30));
+    EXPECT_TRUE(queue.try_push(10));
+    EXPECT_TRUE(queue.try_push(20));
+    EXPECT_TRUE(queue.try_push(30));
 
     int value = 0;
 
-    EXPECT_TRUE(queue.pop(value));
+    EXPECT_TRUE(queue.try_pop(value));
     EXPECT_EQ(value, 10);
 
-    EXPECT_TRUE(queue.pop(value));
+    EXPECT_TRUE(queue.try_pop(value));
     EXPECT_EQ(value, 20);
 
-    EXPECT_TRUE(queue.pop(value));
+    EXPECT_TRUE(queue.try_pop(value));
     EXPECT_EQ(value, 30);
 
-    EXPECT_FALSE(queue.pop(value));
+    EXPECT_FALSE(queue.try_pop(value));
 }
 
 TEST(SPSCQueueTest, DestroysRemainingMoveOnlyElements)
@@ -93,11 +93,11 @@ TEST(SPSCQueueTest, DestroysRemainingMoveOnlyElements)
     {
         sya::SPSCQueue<std::unique_ptr<TrackedObject>, 6> queue;
 
-        queue.push(std::make_unique<TrackedObject>(alive));
-        queue.push(std::make_unique<TrackedObject>(alive));
-        queue.push(std::make_unique<TrackedObject>(alive));
-        queue.push(std::make_unique<TrackedObject>(alive));
-        queue.push(std::make_unique<TrackedObject>(alive));
+        queue.try_push(std::make_unique<TrackedObject>(alive));
+        queue.try_push(std::make_unique<TrackedObject>(alive));
+        queue.try_push(std::make_unique<TrackedObject>(alive));
+        queue.try_push(std::make_unique<TrackedObject>(alive));
+        queue.try_push(std::make_unique<TrackedObject>(alive));
         EXPECT_EQ(alive, 5);
     }
     EXPECT_EQ(alive, 0);
@@ -108,38 +108,38 @@ TEST(SPSCQueueTest, WrapAround)
     sya::SPSCQueue<int, 4> queue;
 
     // head: 0 -> 1 -> 2 -> 3
-    EXPECT_TRUE(queue.push(10));
-    EXPECT_TRUE(queue.push(20));
-    EXPECT_TRUE(queue.push(30));
+    EXPECT_TRUE(queue.try_push(10));
+    EXPECT_TRUE(queue.try_push(20));
+    EXPECT_TRUE(queue.try_push(30));
 
     int value = 0;
 
     // ќсвобождаем два места.
     // tail: 0 -> 1 -> 2
-    EXPECT_TRUE(queue.pop(value));
+    EXPECT_TRUE(queue.try_pop(value));
     EXPECT_EQ(value, 10);
 
-    EXPECT_TRUE(queue.pop(value));
+    EXPECT_TRUE(queue.try_pop(value));
     EXPECT_EQ(value, 20);
 
     // “еперь head дойдЄт до конца массива
     // и завернЄтс€ обратно в 0.
-    EXPECT_TRUE(queue.push(40));
-    EXPECT_TRUE(queue.push(50));
+    EXPECT_TRUE(queue.try_push(40));
+    EXPECT_TRUE(queue.try_push(50));
 
     // ¬ очереди логически должны остатьс€:
     // 30, 40, 50
 
-    EXPECT_TRUE(queue.pop(value));
+    EXPECT_TRUE(queue.try_pop(value));
     EXPECT_EQ(value, 30);
 
-    EXPECT_TRUE(queue.pop(value));
+    EXPECT_TRUE(queue.try_pop(value));
     EXPECT_EQ(value, 40);
 
-    EXPECT_TRUE(queue.pop(value));
+    EXPECT_TRUE(queue.try_pop(value));
     EXPECT_EQ(value, 50);
 
-    EXPECT_FALSE(queue.pop(value));
+    EXPECT_FALSE(queue.try_pop(value));
 }
 
 TEST(SPSCQueueTest, DestroysRemainingElementsAfterWrapAround)
@@ -164,24 +164,24 @@ TEST(SPSCQueueTest, DestroysRemainingElementsAfterWrapAround)
     {
         sya::SPSCQueue<std::unique_ptr<TrackedObject>, 4> queue;
 
-        queue.push(std::make_unique<TrackedObject>(alive));
-        queue.push(std::make_unique<TrackedObject>(alive));
-        queue.push(std::make_unique<TrackedObject>(alive));
+        queue.try_push(std::make_unique<TrackedObject>(alive));
+        queue.try_push(std::make_unique<TrackedObject>(alive));
+        queue.try_push(std::make_unique<TrackedObject>(alive));
 
         EXPECT_EQ(alive, 3);
 
         std::unique_ptr<TrackedObject> tmp;
 
-        queue.pop(tmp);
+        queue.try_pop(tmp);
         tmp.reset();
 
-        queue.pop(tmp);
+        queue.try_pop(tmp);
         tmp.reset();
 
         EXPECT_EQ(alive, 1);
 
-        queue.push(std::make_unique<TrackedObject>(alive));
-        queue.push(std::make_unique<TrackedObject>(alive));
+        queue.try_push(std::make_unique<TrackedObject>(alive));
+        queue.try_push(std::make_unique<TrackedObject>(alive));
 
         EXPECT_EQ(alive, 3);
     }
@@ -202,7 +202,7 @@ TEST(SPSCQueueTest, ProducerConsumer)
         {
             for (int i = 0; i < count; ++i)
             {
-                while (!queue.push(int{i}))
+                while (!queue.try_push(int{i}))
                 {
                     // очередь временно заполнена
                 }
@@ -216,7 +216,7 @@ TEST(SPSCQueueTest, ProducerConsumer)
             {
                 int value;
 
-                while (!queue.pop(value))
+                while (!queue.try_pop(value))
                 {
                     // очередь временно пуста€
                 }
