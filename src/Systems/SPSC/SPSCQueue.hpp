@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <type_traits>
 #include <utility>
+#include <new>
 
 #include <Slot.hpp>
 
@@ -57,8 +58,8 @@ class SPSCQueue
         else
             return idx + 1;
     }
-    alignas(64) std::atomic<std::size_t> m_head{0};
-    alignas(64) std::atomic<std::size_t> m_tail{0};
+    alignas(std::hardware_destructive_interference_size) std::atomic<std::size_t> m_head{0};
+    alignas(std::hardware_destructive_interference_size) std::atomic<std::size_t> m_tail{0};
     std::array<Slot<T>, C + 1> m_queue{};
 };
 
