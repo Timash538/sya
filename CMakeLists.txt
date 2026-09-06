@@ -16,6 +16,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE
 
 include(CTest)
 
+add_subdirectory(src/Core)
 add_subdirectory(src/Systems)
 add_subdirectory(src/App)
 

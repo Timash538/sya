@@ -23,6 +23,19 @@ TEST(SPSCQueueTest, PushAndPopOneElement)
     EXPECT_EQ(value, 42);
 }
 
+TEST(SPSCQueueTest, PushAndPopOnePtrElement)
+{
+    sya::SPSCQueue<std::unique_ptr<int>, 4> queue;
+
+    EXPECT_TRUE(queue.push(std::make_unique<int>(42)));
+
+    std::unique_ptr<int> value = 0;
+    EXPECT_TRUE(queue.pop(value));
+
+    ASSERT_NE(value, nullptr);
+    EXPECT_EQ(*value, 42);
+}
+
 TEST(SPSCQueueTest, QueueBecomesFull)
 {
     sya::SPSCQueue<int, 4> queue;
@@ -56,6 +69,38 @@ TEST(SPSCQueueTest, PreservesFIFOOrder)
     EXPECT_EQ(value, 30);
 
     EXPECT_FALSE(queue.pop(value));
+}
+
+TEST(SPSCQueueTest, DestroysRemainingMoveOnlyElements)
+{
+    struct TrackedObject
+    {
+        explicit TrackedObject(int& alive) : alive{alive}
+        {
+            ++alive;
+        }
+
+        ~TrackedObject()
+        {
+            --alive;
+        }
+
+        int& alive;
+    };
+
+    int alive = 0;
+
+    {
+        sya::SPSCQueue<std::unique_ptr<TrackedObject>, 6> queue;
+
+        queue.push(std::make_unique<TrackedObject>(alive));
+        queue.push(std::make_unique<TrackedObject>(alive));
+        queue.push(std::make_unique<TrackedObject>(alive));
+        queue.push(std::make_unique<TrackedObject>(alive));
+        queue.push(std::make_unique<TrackedObject>(alive));
+        EXPECT_EQ(alive, 5);
+    }
+    EXPECT_EQ(alive, 0);
 }
 
 TEST(SPSCQueueTest, WrapAround)
@@ -95,6 +140,53 @@ TEST(SPSCQueueTest, WrapAround)
     EXPECT_EQ(value, 50);
 
     EXPECT_FALSE(queue.pop(value));
+}
+
+TEST(SPSCQueueTest, DestroysRemainingElementsAfterWrapAround)
+{
+    struct TrackedObject
+    {
+        explicit TrackedObject(int& alive) : alive{alive}
+        {
+            ++alive;
+        }
+
+        ~TrackedObject()
+        {
+            --alive;
+        }
+
+        int& alive;
+    };
+
+    int alive = 0;
+
+    {
+        sya::SPSCQueue<std::unique_ptr<TrackedObject>, 4> queue;
+
+        queue.push(std::make_unique<TrackedObject>(alive));
+        queue.push(std::make_unique<TrackedObject>(alive));
+        queue.push(std::make_unique<TrackedObject>(alive));
+
+        EXPECT_EQ(alive, 3);
+
+        std::unique_ptr<TrackedObject> tmp;
+
+        queue.pop(tmp);
+        tmp.reset();
+
+        queue.pop(tmp);
+        tmp.reset();
+
+        EXPECT_EQ(alive, 1);
+
+        queue.push(std::make_unique<TrackedObject>(alive));
+        queue.push(std::make_unique<TrackedObject>(alive));
+
+        EXPECT_EQ(alive, 3);
+    }
+
+    EXPECT_EQ(alive, 0);
 }
 
 TEST(SPSCQueueTest, ProducerConsumer)

@@ -12,12 +12,14 @@ FetchContent_MakeAvailable(googletest)
 
 add_executable(sya_tests
     SPSC/SPSCQueueTests.cpp
+    Core/Memory/SlotTests.cpp
 )
 
 target_link_libraries(sya_tests
     PRIVATE
-        sya_spsc
-        GTest::gtest_main
+    sya_slot
+    sya_spsc
+    GTest::gtest_main
 )
 
 include(GoogleTest)
