@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-and-test:
+    strategy:
+      fail-fast: false
+
+      matrix:
+        include:
+          - os: windows-latest
+            preset: windows-msvc-debug
+            msvc: true
+
+          - os: windows-latest
+            preset: windows-msvc-release
+            msvc: true
+
+          - os: ubuntu-latest
+            preset: linux-gcc-debug
+            msvc: false
+
+          - os: ubuntu-latest
+            preset: linux-gcc-release
+            msvc: false
+
+          - os: ubuntu-latest
+            preset: linux-clang-debug
+            msvc: false
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup MSVC
+        if: matrix.msvc
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Configure
+        run: cmake --preset ${{ matrix.preset }}
+
+      - name: Build
+        run: cmake --build --preset ${{ matrix.preset }}
+
+      - name: Test
+        run: ctest --preset ${{ matrix.preset }}
