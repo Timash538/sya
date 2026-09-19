@@ -4,6 +4,8 @@
 #include <cstddef>
 #include <type_traits>
 #include <utility>
+#include <bit>
+#include <limits>
 
 #include <Cache.hpp>
 #include <Slot.hpp>
@@ -22,6 +24,12 @@ template <typename T, std::size_t C>
 class MPSCQueue
 {
     static_assert(C > 0, "MPSCQueue capacity must be greater than 0");
+
+    static_assert(std::has_single_bit(C), "MPSCQueue capacity must be a power of two");
+
+    static constexpr std::size_t kHalfRange = std::size_t{1} << (std::numeric_limits<std::size_t>::digits - 1);
+
+    static_assert(C < kHalfRange, "MPSCQueue capacity must be less than half of size_t range");
 
   public:
     MPSCQueue()
@@ -98,7 +106,7 @@ bool MPSCQueue<T, C>::try_emplace(Args&&... args) noexcept
                 return true;
             }
         }
-        else if (sequence < pos)
+        else if ((pos - sequence) < kHalfRange)
         {
             return false;
         }

@@ -85,6 +85,53 @@ TEST(MPSCQueueTest, WrapAround)
     EXPECT_FALSE(queue.try_pop(value));
 }
 
+TEST(MPSCQueueTest, DestroysRemainingElementsAfterWrapAround)
+{
+    struct TrackedObject
+    {
+        explicit TrackedObject(int& alive) : alive{alive}
+        {
+            ++alive;
+        }
+
+        ~TrackedObject()
+        {
+            --alive;
+        }
+
+        int& alive;
+    };
+
+    int alive = 0;
+
+    {
+        sya::MPSCQueue<std::unique_ptr<TrackedObject>, 4> queue;
+
+        EXPECT_TRUE(queue.try_push(std::make_unique<TrackedObject>(alive)));
+        EXPECT_TRUE(queue.try_push(std::make_unique<TrackedObject>(alive)));
+        EXPECT_TRUE(queue.try_push(std::make_unique<TrackedObject>(alive)));
+
+        EXPECT_EQ(alive, 3);
+
+        std::unique_ptr<TrackedObject> tmp;
+
+        EXPECT_TRUE(queue.try_pop(tmp));
+        tmp.reset();
+
+        EXPECT_TRUE(queue.try_pop(tmp));
+        tmp.reset();
+
+        EXPECT_EQ(alive, 1);
+
+        EXPECT_TRUE(queue.try_push(std::make_unique<TrackedObject>(alive)));
+        EXPECT_TRUE(queue.try_push(std::make_unique<TrackedObject>(alive)));
+
+        EXPECT_EQ(alive, 3);
+    }
+
+    EXPECT_EQ(alive, 0);
+}
+
 TEST(MPSCQueueTest, ProducerConsumer)
 {
     constexpr std::size_t count = 100000;
