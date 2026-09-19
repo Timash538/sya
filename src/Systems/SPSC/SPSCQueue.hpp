@@ -7,15 +7,11 @@
 #include <utility>
 
 #include <Slot.hpp>
+#include <Cache.hpp>
 
 namespace sya
 {
 
-#ifdef __cpp_lib_hardware_interference_size
-inline constexpr std::size_t kCacheLineSize = std::hardware_destructive_interference_size;
-#else
-inline constexpr std::size_t kCacheLineSize = 64;
-#endif
 // Bounded lock-free SPSC queue.
 // Exactly one producer and one consumer.
 // Queue must not be destroyed while either thread is using it
