@@ -14,6 +14,7 @@ add_executable(sya_tests
     Core/Memory/SlotTests.cpp
     SPSC/SPSCQueueTests.cpp
     MPSC/MPSCQueueTests.cpp
+    Logger/LogRecord/LogRecordTests.cpp
 )
 
 target_link_libraries(sya_tests
@@ -21,6 +22,7 @@ target_link_libraries(sya_tests
     sya_slot
     sya_spsc
     sya_mpsc
+    sya_logger
     GTest::gtest_main
 )
 

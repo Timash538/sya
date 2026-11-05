@@ -1,14 +1,33 @@
-#include <iostream>
-#include <SPSCQueue.hpp>
+#include <LogMacros.hpp>
 
-int main(int argc, char* argv[])
+#include <thread>
+
+int main()
 {
-    sya::SPSCQueue<int, 10> q;
-	std::cout << "Hello, world and ";
-	for (uint8_t i = 1; i < argc; ++i)
-	{
-		std::cout << argv[i] << " ";
-	}
-	std::cout << "\n";
-	return 0;
+    LOGI("sya Engine started");
+
+    std::thread renderThread(
+        []()
+        {
+            for (int i = 0; i < 5; ++i)
+            {
+                LOGD("Frame rendered", i);
+            }
+        });
+
+    std::thread physicsThread(
+        []()
+        {
+            for (int i = 0; i < 5; ++i)
+            {
+                LOGI("Physics updated", i);
+            }
+        });
+
+    renderThread.join();
+    physicsThread.join();
+
+    LOGI("sya Engine shutdown");
+
+    return 0;
 }

@@ -1,11 +1,12 @@
 #include <array>
 #include <atomic>
+#include <bit>
 #include <concepts>
 #include <cstddef>
+#include <limits>
 #include <type_traits>
 #include <utility>
-#include <bit>
-#include <limits>
+#include <functional>
 
 #include <Cache.hpp>
 #include <Slot.hpp>
@@ -67,6 +68,9 @@ class MPSCQueue
     [[nodiscard]]
     bool try_pop(T& item) noexcept
         requires std::is_nothrow_move_assignable_v<T>;
+    template <typename F>
+    bool try_consume(F&& consumer) noexcept
+        requires std::is_nothrow_invocable_v<F&&, T&>;
 
     [[nodiscard]]
     static constexpr std::size_t capacity() noexcept
@@ -149,6 +153,28 @@ bool MPSCQueue<T, C>::try_pop(T& item) noexcept
     slot.sequence.store(pos + C, std::memory_order_release);
     ++m_dequeuePos;
     return true;
+}
+
+template <typename T, std::size_t C>
+template <typename F>
+bool MPSCQueue<T, C>::try_consume(F&& consumer) noexcept
+     requires std::is_nothrow_invocable_v<F&&, T&>
+{
+
+    auto pos = m_dequeuePos;
+
+    auto& slot = m_queue[pos % C];
+    const auto seq = slot.sequence.load(std::memory_order_acquire);
+
+    if (seq == pos + 1)
+    {
+        std::invoke(std::forward<F>(consumer), slot.storage.get());
+        slot.storage.destroy();
+        slot.sequence.store(pos + C, std::memory_order_release);
+        m_dequeuePos = pos + 1;
+        return true;
+    }
+    return false;
 }
 
 } // namespace sya
