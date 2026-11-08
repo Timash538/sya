@@ -1,33 +1,35 @@
+#include <GLFW/glfw3.h>
 #include <LogMacros.hpp>
-
-#include <thread>
 
 int main()
 {
-    LOGI("sya Engine started");
+    LOGI("Sya started");
 
-    std::thread renderThread(
-        []()
-        {
-            for (int i = 0; i < 5; ++i)
-            {
-                LOGD("Frame rendered", i);
-            }
-        });
+    if (!glfwInit())
+    {
+        LOGE("Failed to initialize GLFW");
+        return 1;
+    }
 
-    std::thread physicsThread(
-        []()
-        {
-            for (int i = 0; i < 5; ++i)
-            {
-                LOGI("Physics updated", i);
-            }
-        });
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-    renderThread.join();
-    physicsThread.join();
+    GLFWwindow* window = glfwCreateWindow(1280, 720, "Sya", nullptr, nullptr);
 
-    LOGI("sya Engine shutdown");
+    if (!window)
+    {
+        LOGE("Failed to create window");
+        glfwTerminate();
+        return 1;
+    }
 
+    while (!glfwWindowShouldClose(window))
+    {
+        glfwWaitEvents();
+    }
+
+    glfwDestroyWindow(window);
+    glfwTerminate();
+
+    LOGI("Sya stopped");
     return 0;
 }
