@@ -14,8 +14,8 @@ add_executable(sya_tests
     Core/Memory/SlotTests.cpp
     SPSC/SPSCQueueTests.cpp
     MPSC/MPSCQueueTests.cpp
-    Logger/LogRecord/LogRecordTests.cpp
-)
+    "Logger/LogRecordTests.cpp"
+ "Logger/LogBufferTests.cpp" "Logger/LogFormatterTests.cpp" "Logger/FileSinkTests.cpp")
 
 target_link_libraries(sya_tests
     PRIVATE
