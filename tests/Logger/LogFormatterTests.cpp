@@ -20,7 +20,7 @@ TEST(LogFormatterTest, FormatsMessageWithEmptySourceLocation)
     EXPECT_FALSE(buffer.truncated());
 }
 
-namespace
+namespace formatter_test
 {
 struct aStruct
 {
@@ -37,7 +37,7 @@ TEST(LogFormatterTest, FormatsMessageWithSourceLocation)
 {
     char arr[512];
     LogBuffer buffer{arr};
-    aStruct s;
+    formatter_test::aStruct s;
     s.aFunc(buffer);
     EXPECT_EQ((std::string_view{arr, buffer.size()}), "[00:00:00.000 UTC] [aStruct] [aFunc] [INFO] Hello");
     EXPECT_FALSE(buffer.truncated());
