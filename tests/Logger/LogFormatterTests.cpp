@@ -20,19 +20,23 @@ TEST(LogFormatterTest, FormatsMessageWithEmptySourceLocation)
     EXPECT_FALSE(buffer.truncated());
 }
 
+namespace
+{
+struct aStruct
+{
+    void aFunc(LogBuffer& buffer)
+    {
+        LogRecord record{LogLevel::Info, std::source_location::current(), "Hello"};
+        record.timestamp = std::chrono::system_clock::time_point{};
+        LogFormatter::format(record, buffer);
+    }
+};
+} // namespace
+
 TEST(LogFormatterTest, FormatsMessageWithSourceLocation)
 {
     char arr[512];
     LogBuffer buffer{arr};
-    struct aStruct
-    {
-        void aFunc(LogBuffer& buffer)
-        {
-            LogRecord record{LogLevel::Info, std::source_location::current(), "Hello"};
-            record.timestamp = std::chrono::system_clock::time_point{};
-            LogFormatter::format(record, buffer);
-        }
-    };
     aStruct s;
     s.aFunc(buffer);
     EXPECT_EQ((std::string_view{arr, buffer.size()}), "[00:00:00.000 UTC] [aStruct] [aFunc] [INFO] Hello");
