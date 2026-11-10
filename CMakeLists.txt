@@ -36,8 +36,9 @@ FetchContent_MakeAvailable(glfw)
 
 add_subdirectory(src/Core)
 add_subdirectory(src/Systems)
-add_subdirectory(src/App)
 add_subdirectory(src/Platform)
+add_subdirectory(src/App)
+
 
 if(BUILD_TESTING)
     add_subdirectory(tests)

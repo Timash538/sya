@@ -1,35 +1,32 @@
 #include <GLFW/glfw3.h>
+#include <GlfwRuntime.hpp>
 #include <LogMacros.hpp>
+#include <Window.hpp>
+#include <exception>
+
+using namespace sya;
 
 int main()
 {
-    LOGI("Sya started");
-
-    if (!glfwInit())
+    try
     {
-        LOGE("Failed to initialize GLFW");
+
+        LOGI("Sya started");
+        {
+            GlfwRuntime GRuntime;
+            Window window(1280, 720, "Sya");
+
+            while (!window.shouldClose())
+            {
+                glfwWaitEvents();
+            }
+        }
+        LOGI("Sya stopped");
+        return 0;
+    }
+    catch (const std::exception& error)
+    {
+        LOGE("Application failed: ", error.what());
         return 1;
     }
-
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-
-    GLFWwindow* window = glfwCreateWindow(1280, 720, "Sya", nullptr, nullptr);
-
-    if (!window)
-    {
-        LOGE("Failed to create window");
-        glfwTerminate();
-        return 1;
-    }
-
-    while (!glfwWindowShouldClose(window))
-    {
-        glfwWaitEvents();
-    }
-
-    glfwDestroyWindow(window);
-    glfwTerminate();
-
-    LOGI("Sya stopped");
-    return 0;
 }
