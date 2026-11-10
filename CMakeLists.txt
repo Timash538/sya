@@ -33,6 +33,7 @@ FetchContent_Declare(
 )
 
 FetchContent_MakeAvailable(glfw)
+find_package(Vulkan REQUIRED)
 
 add_subdirectory(src/Core)
 add_subdirectory(src/Systems)
