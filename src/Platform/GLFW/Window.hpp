@@ -16,6 +16,7 @@ public:
     Window& operator=(const Window&) = delete;
 
     bool shouldClose() const noexcept;
+    GLFWwindow* nativeHandle() const noexcept;
 
 private:
     GLFWwindow* window{nullptr};

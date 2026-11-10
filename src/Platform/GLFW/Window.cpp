@@ -24,3 +24,8 @@ bool Window::shouldClose() const noexcept
 {
     return glfwWindowShouldClose(window) != 0;
 }
+
+GLFWwindow* Window::nativeHandle() const noexcept
+{
+    return window;
+}

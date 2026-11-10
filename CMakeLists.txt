@@ -37,6 +37,7 @@ find_package(Vulkan REQUIRED)
 
 add_subdirectory(src/Core)
 add_subdirectory(src/Systems)
+add_subdirectory(src/Rendering)
 add_subdirectory(src/Platform)
 add_subdirectory(src/App)
 
