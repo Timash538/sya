@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <cstdint>
 #include <VulkanInstance.hpp>
+#include <VulkanSurface.hpp>
 #include <span>
 
 using namespace sya;
@@ -16,7 +17,8 @@ int main()
 
         LOGI("Sya started");
         {
-            GlfwRuntime GRuntime;
+            GlfwRuntime runtime;
+            
 
             std::uint32_t extensionCount{};
             const char** extensions = glfwGetRequiredInstanceExtensions(&extensionCount);
@@ -29,6 +31,8 @@ int main()
             VulkanInstance vulkan{std::span<const char* const>{extensions, extensionCount}};
 
             Window window(1280, 720, "Sya");
+
+            VulkanSurface surface{vulkan.nativeHandle(), window.nativeHandle()};
 
             while (!window.shouldClose())
             {
