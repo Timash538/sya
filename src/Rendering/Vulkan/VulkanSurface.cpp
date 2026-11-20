@@ -16,3 +16,8 @@ VulkanSurface::~VulkanSurface()
 {
     vkDestroySurfaceKHR(instance, surface, nullptr);
 }
+
+VkSurfaceKHR VulkanSurface::nativeHandle() const noexcept
+{
+    return surface;
+}

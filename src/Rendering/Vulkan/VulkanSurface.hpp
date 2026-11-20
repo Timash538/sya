@@ -15,6 +15,8 @@ public:
     VulkanSurface(const VulkanSurface&) = delete;
     VulkanSurface& operator=(const VulkanSurface&) = delete;
 
+    VkSurfaceKHR nativeHandle() const noexcept;
+
 private:
     VkInstance instance;
     VkSurfaceKHR surface{VK_NULL_HANDLE};

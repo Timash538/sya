@@ -19,6 +19,9 @@ public:
 
 private:
     VkInstance instance{VK_NULL_HANDLE};
+
+    VkDebugUtilsMessengerEXT debugMessenger{VK_NULL_HANDLE};
+    PFN_vkDestroyDebugUtilsMessengerEXT destroyDebugMessenger{nullptr};
 };
 
 } // namespace sya

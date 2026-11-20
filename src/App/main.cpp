@@ -1,12 +1,13 @@
 #include <GLFW/glfw3.h>
 #include <GlfwRuntime.hpp>
 #include <LogMacros.hpp>
-#include <Window.hpp>
-#include <stdexcept>
-#include <cstdint>
 #include <VulkanInstance.hpp>
 #include <VulkanSurface.hpp>
+#include <Window.hpp>
+#include <cstdint>
 #include <span>
+#include <stdexcept>
+#include <vector>
 
 using namespace sya;
 
@@ -18,7 +19,6 @@ int main()
         LOGI("Sya started");
         {
             GlfwRuntime runtime;
-            
 
             std::uint32_t extensionCount{};
             const char** extensions = glfwGetRequiredInstanceExtensions(&extensionCount);
@@ -28,18 +28,84 @@ int main()
                 throw std::runtime_error{"GLFW could not provide Vulkan surface extensions"};
             }
 
-            VulkanInstance vulkan{std::span<const char* const>{extensions, extensionCount}};
+            std::vector<const char*> instanceExtensions{extensions, extensions + extensionCount};
+
+#ifndef NDEBUG
+            instanceExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+#endif
+
+            VulkanInstance vulkan{instanceExtensions};
 
             Window window(1280, 720, "Sya");
 
             VulkanSurface surface{vulkan.nativeHandle(), window.nativeHandle()};
+            std::vector<VkPhysicalDevice> devices;
+            while (true)
+            {
+                std::uint32_t count{};
+                VkResult result;
 
+                result = vkEnumeratePhysicalDevices(vulkan.nativeHandle(), &count, nullptr);
+
+                if (result != VK_SUCCESS)
+                {
+                    throw std::runtime_error("Failed to enumerate physical devices");
+                }
+                if (count == 0)
+                {
+                    throw std::runtime_error("No Vulkan devices found");
+                }
+                devices.resize(count);
+                result = vkEnumeratePhysicalDevices(vulkan.nativeHandle(), &count, devices.data());
+
+                if (result == VK_INCOMPLETE)
+                {
+                    continue;
+                }
+                if (result != VK_SUCCESS)
+                {
+                    throw std::runtime_error("Failed to enumerate physical devices");
+                }
+                devices.resize(count);
+                break;
+            }
+            for (const auto& device : devices)
+            {
+                VkPhysicalDeviceProperties properties{};
+                vkGetPhysicalDeviceProperties(device, &properties);
+                LOGI(properties.deviceName);
+
+                std::uint32_t familyCount{};
+                vkGetPhysicalDeviceQueueFamilyProperties(device, &familyCount, nullptr);
+
+                std::vector<VkQueueFamilyProperties> families(familyCount);
+                vkGetPhysicalDeviceQueueFamilyProperties(device, &familyCount, families.data());
+                for (int i = 0; i < familyCount; ++i)
+                {
+                    if ((families[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0)
+                        LOGI("Graphics queue family", i);
+
+                    VkBool32 canPresent = VK_FALSE;
+                    const VkResult result =
+                        vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface.nativeHandle(), &canPresent);
+
+                    if (result != VK_SUCCESS)
+                    {
+                        throw std::runtime_error{"Failed to query presentation support"};
+                    }
+
+                    if (canPresent == VK_TRUE)
+                    {
+                        LOGI("Presentation queue family", i);
+                    }
+                }
+            }
             while (!window.shouldClose())
             {
                 glfwWaitEvents();
             }
         }
-            
+
         LOGI("Sya stopped");
         return 0;
     }
