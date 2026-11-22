@@ -40,6 +40,8 @@ int main()
 
             VulkanSurface surface{vulkan.nativeHandle(), window.nativeHandle()};
             std::vector<VkPhysicalDevice> devices;
+            VkPhysicalDevice chosenDevice{VK_NULL_HANDLE};
+            uint32_t chosenFamilyIndex{};
             while (true)
             {
                 std::uint32_t count{};
@@ -80,10 +82,8 @@ int main()
 
                 std::vector<VkQueueFamilyProperties> families(familyCount);
                 vkGetPhysicalDeviceQueueFamilyProperties(device, &familyCount, families.data());
-                for (int i = 0; i < familyCount; ++i)
+                for (uint32_t i = 0; i < familyCount; ++i)
                 {
-                    if ((families[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0)
-                        LOGI("Graphics queue family", i);
 
                     VkBool32 canPresent = VK_FALSE;
                     const VkResult result =
@@ -94,11 +94,22 @@ int main()
                         throw std::runtime_error{"Failed to query presentation support"};
                     }
 
-                    if (canPresent == VK_TRUE)
+                    bool canDraw = (families[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0;
+
+                    if (canDraw && canPresent == VK_TRUE)
                     {
-                        LOGI("Presentation queue family", i);
+                        LOGI("Selected graphics and presentation queue family", i);
+                        chosenDevice = device;
+                        chosenFamilyIndex = i;
+                        break;
                     }
                 }
+                if (chosenDevice != VK_NULL_HANDLE)
+                    break;
+            }
+            if (chosenDevice == VK_NULL_HANDLE)
+            {
+                throw std::runtime_error("Failed to choose a device");
             }
             while (!window.shouldClose())
             {
