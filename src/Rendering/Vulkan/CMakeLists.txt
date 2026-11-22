@@ -1,4 +1,5 @@
 add_library(sya_vulkan STATIC
+    PhysicalDeviceSelection.cpp
     VulkanInstance.cpp
     VulkanSurface.cpp)
 
