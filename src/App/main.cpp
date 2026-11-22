@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <span>
 #include <vector>
+#include <VulkanDevice.hpp>
 
 using namespace sya;
 
@@ -39,7 +40,11 @@ int main()
             Window window(1280, 720, "Sya");
 
             VulkanSurface surface{vulkan.nativeHandle(), window.nativeHandle()};
-            [[maybe_unused]] const auto selection = selectPhysicalDevice(vulkan.nativeHandle(), surface.nativeHandle());
+
+            const auto selection = selectPhysicalDevice(vulkan.nativeHandle(), surface.nativeHandle());
+
+            VulkanDevice device{selection.device, selection.queueFamilyIndex};
+
             while (!window.shouldClose())
             {
                 glfwWaitEvents();
